@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ball Video Factory — Single HTML</title>
+<style>
+:root{color-scheme:dark;--bg:#080b13;--panel:#131a2b;--line:#2b3650;--text:#f3f6ff;--muted:#a7b2c9;--purple:#8b5cf6;--cyan:#22d3ee}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1a2340,#080b13 52%);color:var(--text);font:15px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:980px;margin:auto;padding:22px 14px 60px}.hero{padding:15px 0 22px}.tag{color:var(--cyan);font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:.75rem}h1{font-size:clamp(2.3rem,8vw,4.4rem);line-height:.98;letter-spacing:-.05em;margin:12px 0}p{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:15px}.card{background:rgba(19,26,43,.95);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 16px 48px #0003}h2{font-size:1.08rem;margin:0 0 12px}label{display:block;margin:12px 0 5px;color:#dbe3f6;font-size:.9rem}select,input[type=text],input[type=number]{width:100%;padding:11px 12px;border:1px solid #3a4765;border-radius:10px;background:#090f1e;color:white;font:inherit}button{border:0;border-radius:11px;padding:12px 15px;background:linear-gradient(110deg,#8b5cf6,#6366f1);color:white;font:700 .96rem system-ui;cursor:pointer}button.secondary{background:#252e45;border:1px solid #3a4662}button:disabled{opacity:.45;cursor:wait}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}.status{background:#090f1d;border:1px solid #2b3650;border-radius:10px;padding:11px;margin-top:13px;white-space:pre-wrap;font-size:.88rem;color:#c6d0e5}.preview{position:relative;width:min(100%,250px);aspect-ratio:9/16;margin:0 auto 12px;border:1px solid #34415d;border-radius:18px;overflow:hidden;background:#050713;display:grid;place-items:center}.preview canvas{width:100%;height:100%;display:block}.muted{font-size:.85rem;color:var(--muted)}.meter{height:7px;border-radius:9px;background:#28324a;overflow:hidden;margin-top:10px}.meter span{display:block;width:0;height:100%;background:linear-gradient(90deg,#8b5cf6,#22d3ee)}.small{font-size:.8rem;color:var(--muted)}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.pill{display:inline-block;padding:4px 9px;border-radius:20px;background:#292047;color:#d2c5ff;font-size:.78rem}.check{display:flex;align-items:center;gap:8px}.check input{accent-color:#8b5cf6}.videoout{width:100%;margin-top:12px;border-radius:12px;background:#050713}.warning{border-color:#685328;color:#ffe6a3}.hidden{display:none!important}
+</style>
+</head>
+<body><main>
+<header class="hero">
+<div class="tag">Single-file creator studio</div>
+<h1>Ball Video<br><span style="color:#b49aff">Factory</span></h1>
+<p>Eine einzelne HTML-Datei für iPad und GitHub Pages. Erzeuge deine eigene Ball-Simulation, nimm sie im Browser auf und exportiere sie als WebM, wenn dein Browser das unterstützt.</p>
+<span class="pill">Keine externen Bibliotheken</span>
+</header>
+<div class="grid">
+<section class="card">
+<h2>⚙️ Video einstellen</h2>
+<label for="style">Simulationsstil</label>
+<select id="style"><option value="escape">Ball entkommt – 3 neue spawnen</option><option value="hexagon">Sechseck – Wände öffnen sich</option><option value="blocks">Hindernis-Arena</option></select>
+<label for="look">Grafikstil</label>
+<select id="look"><option value="neon">Neon auf Schwarz</option><option value="clean">Minimalistisch</option><option value="fire">Feuerfarben</option></select>
+<label for="duration">Aufnahmelänge</label>
+<select id="duration"><option value="15">15 Sekunden (Test)</option><option value="30">30 Sekunden</option><option value="65" selected>65 Sekunden</option><option value="75">75 Sekunden</option><option value="90">90 Sekunden</option></select>
+<label for="hook">Hook / Einstiegstext</label><input id="hook" type="text" maxlength="75" value="EVERY TIME A BALL ESCAPES, 3 MORE SPAWN...">
+<label for="caption">Untertitel</label><input id="caption" type="text" maxlength="75" value="HOW LONG CAN THE ARENA SURVIVE?">
+<label for="maxballs">Maximale Ballanzahl</label><select id="maxballs"><option value="24">24 (flüssiger)</option><option value="40" selected>40</option><option value="60">60 (anspruchsvoller)</option></select>
+<label class="check"><input id="sound" type="checkbox" checked> Generierten Ton beim Export versuchen</label>
+<div class="actions"><button id="start">▶ Simulation starten</button><button class="secondary" id="reset">↻ Neustart</button></div>
+<div class="actions"><button id="record">● Video aufnehmen</button><button class="secondary" id="stop" disabled>Aufnahme stoppen</button></div>
+<div class="meter"><span id="progress"></span></div>
+<div class="status" id="status">Bereit. Starte die Simulation oder beginne eine Browser-Aufnahme.</div>
+<p class="small">Tipp: Für TikTok den Browser im Hochformat lassen. Die Aufnahmefunktion hängt von der Unterstützung durch Safari/iPadOS ab.</p>
+</section>
+<section class="card">
+<div class="row"><h2>👁️ Live-Simulation</h2><span class="pill" id="count">Bälle: 1</span></div>
+<canvas id="screen" width="360" height="640" class="videoout" style="aspect-ratio:9/16;max-height:680px;object-fit:contain"></canvas>
+<div class="actions"><button class="secondary" id="downloadFrame">Standbild speichern</button></div>
+<p class="muted">Die Simulation läuft direkt in dieser Seite. Beim Aufnehmen wird der Canvas inklusive Bewegung aufgezeichnet.</p>
+<div class="status warning"><b>Wichtige Grenze:</b> Diese reine HTML-Datei kann nicht automatisch im Cloud-Hintergrund laufen oder zuverlässig MP4 rendern. Browser-Aufnahmen werden meist als WebM gespeichert. Für automatische MP4-Erzeugung und Zeitpläne wäre ein separater Cloud-Workflow nötig.</div>
+</section>
+</div>
+</main>
+<script>
+(()=> {
+const $=id=>document.getElementById(id), canvas=$('screen'), ctx=canvas.getContext('2d');
+const W=canvas.width,H=canvas.height,cx=W/2,cy=H*.48,R=132,br=5;
+let balls=[],running=false,raf=0,last=0,elapsed=0,escapes=0,seed=7391,recording=null,chunks=[],stream=null;
+const palette=()=>({neon:['#22d3ee','#fb7185','#a78bfa','#facc15','#86efac'],clean:['#e5e7eb','#60a5fa','#93c5fd','#cbd5e1'],fire:['#fb923c','#ef4444','#fbbf24','#fef3c7']}[$('look').value]||['#22d3ee','#fb7185']);
+function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
+function addBall(x=cx,y=cy,vx=(rand()-.5)*150,vy=(rand()-.5)*150,col=Math.floor(rand()*palette().length)){balls.push({x,y,vx,vy,col})}
+function reset(){seed=(Date.now()%100000000)>>>0;balls=[];escapes=0;elapsed=0;addBall(cx,cy-R*.3,100,110,0);for(let i=0;i<4;i++)addBall(cx+(rand()-.5)*60,cy+(rand()-.5)*60,(rand()-.5)*170,(rand()-.5)*170,i%palette().length);$('progress').style.width='0%';draw();$('count').textContent='Bälle: '+balls.length}
+function draw(){
+ const colors=palette(),style=$('style').value;
+ ctx.fillStyle='#050713';ctx.fillRect(0,0,W,H);
+ const grad=ctx.createRadialGradient(cx,cy,10,cx,cy,300);grad.addColorStop(0,'#151d37');grad.addColorStop(1,'#050713');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+ ctx.textAlign='center';ctx.font='bold 13px system-ui';ctx.fillStyle='#f4f6ff';ctx.fillText($('hook').value.toUpperCase().slice(0,45),W/2,43);
+ ctx.font='bold 12px system-ui';ctx.fillStyle='#67e8f9';ctx.fillText(`BALLS: ${balls.length}   ESCAPES: ${escapes}`,W/2,66);
+ ctx.strokeStyle='#a78bfa';ctx.lineWidth=2.5;
+ if(style==='hexagon'){ctx.beginPath();for(let i=0;i<6;i++){let a=Math.PI/3*i+elapsed*.08,x=cx+Math.cos(a)*R,y=cy+Math.sin(a)*R;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath();ctx.stroke();if(Math.floor(elapsed/5)%2===1){let k=Math.floor(elapsed/5)%6,a=Math.PI/3*k+elapsed*.08,b=Math.PI/3*(k+1)+elapsed*.08;ctx.strokeStyle='#050713';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);ctx.lineTo(cx+Math.cos(b)*R,cy+Math.sin(b)*R);ctx.stroke()}}
+ else if(style==='blocks'){ctx.strokeRect(cx-R,cy-R,R*2,R*2);for(let i=0;i<7;i++){let a=i*Math.PI*2/7;ctx.strokeStyle='#405077';ctx.strokeRect(cx+Math.cos(a)*R*.55-9,cy+Math.sin(a)*R*.55-9,18,18)}}
+ else {let start=(elapsed*38)%360;ctx.beginPath();ctx.arc(cx,cy,R,(start+22)*Math.PI/180,(start+338)*Math.PI/180);ctx.stroke();ctx.strokeStyle='#38416c';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx,cy,R-6,(start+22)*Math.PI/180,(start+338)*Math.PI/180);ctx.stroke()}
+ for(const b of balls){let c=colors[b.col%colors.length];ctx.beginPath();ctx.fillStyle=c+'35';ctx.arc(b.x,b.y,br*2.7,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.fillStyle=c;ctx.arc(b.x,b.y,br,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.fillStyle='#fff';ctx.arc(b.x-1.5,b.y-1.5,1.3,0,Math.PI*2);ctx.fill()}
+ ctx.fillStyle='#28324a';ctx.fillRect(W*.12,H*.88,W*.76,5);ctx.fillStyle='#22d3ee';ctx.fillRect(W*.12,H*.88,W*.76*(elapsed/(+$('duration').value)),5);
+ ctx.fillStyle='#e2e8f0';ctx.font='bold 11px system-ui';ctx.fillText($('caption').value.toUpperCase().slice(0,44),W/2,H*.92);
+ ctx.fillStyle='#94a3b8';ctx.font='bold 9px system-ui';ctx.fillText('FOLLOW FOR THE NEXT SIMULATION',W/2,H*.96);
+}
+function step(ts){if(!running)return;let dt=Math.min(.033,(ts-last)/1000||.016);last=ts;elapsed+=dt;const style=$('style').value,max=+$('maxballs').value;
+ for(let i=balls.length-1;i>=0;i--){let b=balls[i];b.vx+=Math.sin(elapsed*1.5+b.col)*12*dt;b.vy+=55*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;
+ const dx=b.x-cx,dy=b.y-cy,dist=Math.hypot(dx,dy)||1;
+ if(style==='blocks'){if(b.x<cx-R+br||b.x>cx+R-br){b.vx*=-1;b.x=Math.max(cx-R+br,Math.min(cx+R-br,b.x))}if(b.y<cy-R+br||b.y>cy+R-br){b.vy*=-1;b.y=Math.max(cy-R+br,Math.min(cy+R-br,b.y))}}
+ else if(dist>R-br){let angle=(Math.atan2(dy,dx)*180/Math.PI+360)%360,gap=(elapsed*38)%360,delta=Math.abs((angle-gap+180)%360-180);let escaped=(style==='escape'&&delta<23)||(style==='hexagon'&&Math.floor(elapsed/5)%2===1&&delta<28);if(escaped){escapes++;balls.splice(i,1);if(balls.length<max)for(let n=0;n<3&&balls.length<max;n++){let a=rand()*Math.PI*2,s=75+rand()*100;addBall(cx+Math.cos(a)*12,cy+Math.sin(a)*12,Math.cos(a)*s,Math.sin(a)*s)}continue}let nx=dx/dist,ny=dy/dist,dot=b.vx*nx+b.vy*ny;b.vx-=2*dot*nx;b.vy-=2*dot*ny;b.x=cx+nx*(R-br-1);b.y=cy+ny*(R-br-1)}
+ }
+ // Cheap ball collisions for a small number of balls
+ for(let i=0;i<balls.length;i++)for(let j=i+1;j<Math.min(balls.length,i+12);j++){let a=balls[i],b=balls[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);if(d>0&&d<br*2){let nx=dx/d,ny=dy/d,rel=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;if(rel>0){a.vx-=rel*nx;a.vy-=rel*ny;b.vx+=rel*nx;b.vy+=rel*ny}}}
+ $('count').textContent='Bälle: '+balls.length+' · Ausbrüche: '+escapes;$('progress').style.width=Math.min(100,elapsed/(+$('duration').value)*100)+'%';draw();
+ if(elapsed>=+$('duration').value){running=false;$('status').textContent='Simulation beendet. Du kannst die Aufnahme stoppen oder neu starten.';$('start').disabled=false;$('record').disabled=false;$('stop').disabled=true;return}
+ raf=requestAnimationFrame(step)
+}
+function start(){cancelAnimationFrame(raf);running=true;last=0;if(elapsed>=+$('duration').value)reset();$('status').textContent='Simulation läuft…';$('start').disabled=true;raf=requestAnimationFrame(step)}
+function stopSim(){running=false;cancelAnimationFrame(raf);$('start').disabled=false;draw()}
+$('start').onclick=start;$('reset').onclick=()=>{stopSim();reset();$('status').textContent='Zurückgesetzt.'};
+['style','look','hook','caption'].forEach(id=>$(id).addEventListener('input',draw));
+$('downloadFrame').onclick=()=>{let a=document.createElement('a');a.download='ball-simulation-frame.png';a.href=canvas.toDataURL('image/png');a.click()};
+$('record').onclick=()=>{
+ if(!canvas.captureStream||!window.MediaRecorder){$('status').textContent='Dieser Browser unterstützt Canvas-Aufnahmen nicht. Versuche einen aktuellen Browser oder verwende die Bildschirmaufnahme des iPads.';return}
+ try{
+  stream=canvas.captureStream(30);let options={};if(MediaRecorder.isTypeSupported('video/webm;codecs=vp9'))options.mimeType='video/webm;codecs=vp9';else if(MediaRecorder.isTypeSupported('video/webm'))options.mimeType='video/webm';
+  chunks=[];recording=new MediaRecorder(stream,options);recording.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};recording.onstop=()=>{let blob=new Blob(chunks,{type:recording.mimeType||'video/webm'});let url=URL.createObjectURL(blob);let a=document.createElement('a');a.href=url;a.download='ball-simulation.webm';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);stream.getTracks().forEach(t=>t.stop());$('status').textContent='Aufnahme fertig. Die Videodatei wurde exportiert.';$('record').disabled=false;$('stop').disabled=true};
+  recording.start(1000);reset();$('record').disabled=true;$('stop').disabled=false;$('status').textContent='Aufnahme läuft. Sie stoppt automatisch nach der gewählten Länge.';start();let duration=+$('duration').value*1000;setTimeout(()=>{if(recording&&recording.state==='recording'){stopSim();recording.stop()}},duration+200)
+ }catch(e){$('status').textContent='Aufnahme konnte nicht gestartet werden: '+e.message}
+};
+$('stop').onclick=()=>{stopSim();if(recording&&recording.state==='recording')recording.stop()};
+reset();
+})();
+</script>
+</body>
+</html>
