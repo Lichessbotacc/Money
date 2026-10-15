@@ -255,7 +255,7 @@ M.release={nt:true,
    const sp=S.sp[t];if(sp){sp.tt+=dt;const p=Math.min(1,sp.tt/sp.dur);S.na[t]=sp.a0+(sp.a1-sp.a0)*(1-Math.pow(1-p,3));if(Math.random()<dt*12)tone(500+Math.random()*300,.03,'square',.02);if(p>=1){S.sp[t]=null;applySeg(t,spinResult(sp.a1))}}
    if(S.q[t]>0&&S.bul.length<9000){S.fa[t]+=Math.min(110,15+S.q[t]*.12)*dt;const c=cpos(t);
     while(S.fa[t]>=1&&S.q[t]>0){S.fa[t]--;S.q[t]--;const a=clamp(cang(t)+rnd(-.03,.03),RBASE[t],RBASE[t]+Math.PI/2);
-     S.bul.push({x:c.x+Math.cos(a)*18,y:c.y+Math.sin(a)*18,vx:Math.cos(a)*150,vy:Math.sin(a)*150,t,l:5,dead:false})}}
+     S.bul.push({x:c.x+Math.cos(a)*18,y:c.y+Math.sin(a)*18,vx:Math.cos(a)*150,vy:Math.sin(a)*150,t,l:1e9,dead:false})}}
    else if(S.q[t]<=0)S.fa[t]=0}
   for(const b of balls)if(b.z==='p')rBall(b,dt);
   for(const d of S.defs){d.x+=d.vx*dt;d.y+=d.vy*dt;d.life-=dt;
