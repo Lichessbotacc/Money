@@ -149,6 +149,7 @@ const MODES={
 };
 const M={};
 let mode='release',state='idle',elapsed=0,last=0,hudT=0,balls=[],parts=[],S={},pal=PAL.neon;
+let capTrack=null,capNext=0,capCount=0,capT0=0;const CAPMS=1000/30;
 let recorder=null,recChunks=[],recording=false,recDiscard=false,mediaStream=null,lastBlob=null,lastUrl='';
 let RX=null,RNG=Math.random,rxBusy=false,rxNext=null,rxGame=0,rxToken=0,lastFiles=[];const HS=1/120;
 const dur=()=>RX?RX.len:(mode==='release'?65:+$('duration').value),spd=()=>+$('speed').value,dif=()=>({easy:0,normal:1,hard:2})[$('difficulty').value],nb=()=>+$('ballCount').value;
@@ -498,7 +499,8 @@ function hud(){const i=M[mode].info();$('statBalls').textContent=balls.length;$(
 const isEnd=()=>mode==='release'?(elapsed>=dur()&&S.win>=0&&S.wt>2.5):elapsed>=dur();
 function loop(now){const dt=Math.min(.05,(now-last)/1000||.016);last=now;
  if(state==='run'){if(RX){frame(dt);elapsed=Math.max(0,(RX.k-RX.ka)*HS/spd());if(RX.k>=RX.kb)finish()}else{elapsed+=dt;frame(dt);if(isEnd())finish()}}else if(state==='idle')frame(dt);
- draw();hudT+=dt;if(hudT>.1){hudT=0;hud()}requestAnimationFrame(loop)}
+ draw();if(recording&&capTrack){if(!capNext){capNext=now;capT0=now}if(now>=capNext-3){try{capTrack.requestFrame();capCount++}catch(e){}capNext+=CAPMS;if(capNext<now-100)capNext=now+CAPMS}}
+ hudT+=dt;if(hudT>.1){hudT=0;hud()}requestAnimationFrame(loop)}
 function start(){ensureAudio();if(state!=='pause'&&!RX)init();state='run';last=performance.now();$('startBtn').textContent='Ⅱ Pause';$('statusText').textContent='Simulation läuft';if(!recording)setLive('ENGINE · RUNNING')}
 function pause(){state='pause';$('startBtn').textContent='▶ Weiter';$('statusText').textContent='Pausiert';if(!recording)setLive('ENGINE · PAUSED')}
 function finish(){state='idle';elapsed=Math.max(elapsed,dur());$('startBtn').textContent='▶ Simulation starten';$('statusText').textContent='Simulation abgeschlossen';if(recording)stopRec(false);else{setLive('LOCAL ENGINE · READY');toast('Fertig! Du kannst jetzt exportieren.')}}
@@ -508,7 +510,7 @@ function selectMode(m){const prev=MODES[mode].hook;mode=m;document.querySelector
 /* ---------- Recording ---------- */
 function startRec(auto){if(recording){stopRec(false);return}
  if(!window.MediaRecorder){toast('Dieser Browser unterstützt den Videoexport nicht. Bitte aktuelles Chrome oder Safari nutzen.');return}
- ensureAudio();let ms;try{ms=canvas.captureStream(30)}catch(e){toast('Canvas-Aufnahme wird nicht unterstützt.');return}
+ ensureAudio();let ms;try{ms=canvas.captureStream(0);capTrack=ms.getVideoTracks()[0]||null;if(!capTrack||typeof capTrack.requestFrame!=='function'){ms.getTracks().forEach(t=>t.stop());ms=canvas.captureStream(30);capTrack=null}else{try{capTrack.contentHint='motion'}catch(e){}}capNext=0;capCount=0;capT0=0}catch(e){toast('Canvas-Aufnahme wird nicht unterstützt.');return}
  if(dest&&$('sound').checked)dest.stream.getAudioTracks().forEach(t=>ms.addTrack(t.clone()));
  const mime=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(m=>{try{return MediaRecorder.isTypeSupported(m)}catch(e){return false}})||'';
  try{mediaStream=ms;recChunks=[];recDiscard=false;recorder=new MediaRecorder(ms,mime?{mimeType:mime,videoBitsPerSecond:6e6,audioBitsPerSecond:128e3}:{videoBitsPerSecond:8e6});
@@ -519,7 +521,7 @@ function startRec(auto){if(recording){stopRec(false);return}
    const v=$('videoOut');v.src=lastUrl;v.classList.remove('hidden');$('shareBtn').classList.remove('hidden');
    const a=document.createElement('a');a.href=lastUrl;const fname=RX?'orbit-'+mode+'-'+RX.game+'-'+(RX.idx+1)+'.'+ext:'orbit-'+mode+'.'+ext;a.download=fname;document.body.appendChild(a);a.click();a.remove();if(RX)lastFiles.push({blob:lastBlob,name:fname});else lastFiles=[];
    if(!RX)pack()
-   $('statusText').textContent='Video fertig · '+ext.toUpperCase();setLive('VIDEO READY');if(RX)toast('Video gespeichert');else toast('Fertig! Falls nichts gespeichert wurde: „In Fotos sichern / Teilen“ tippen.');if(rxNext){const f=rxNext;rxNext=null;f()}};
+   {const secs=capT0?(performance.now()-capT0)/1000:0,fps=secs>1?capCount/secs:0;$('statusText').textContent='Video fertig · '+ext.toUpperCase()+(fps?' · Ø '+fps.toFixed(0)+' fps'+(fps<27?' ⚠ Gerät zu langsam – Partikel/Bälle reduzieren':''):'');}setLive('VIDEO READY');if(RX)toast('Video gespeichert');else toast('Fertig! Falls nichts gespeichert wurde: „In Fotos sichern / Teilen“ tippen.');if(rxNext){const f=rxNext;rxNext=null;f()}};
   recorder.start(1000);recording=true;$('recordBtn').textContent='■';$('exportBtn').textContent='■ Erstellung abbrechen';$('videoOut').classList.add('hidden');$('shareBtn').classList.add('hidden');
   setLive('RENDERING · '+(mime.includes('mp4')?'MP4':'WEBM'),true);$('statusText').textContent=auto?'Video wird erstellt … Tab offen lassen':'Aufnahme läuft';
   toast(auto?'Video-Erstellung gestartet. Bitte diesen Tab offen lassen.':'Aufnahme läuft.');
